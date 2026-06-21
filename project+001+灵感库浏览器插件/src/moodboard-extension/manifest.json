@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "灵感板 — 添加到灵感库",
+  "version": "5.3.1",
+  "description": "右键图片/GIF/视频，支持小红书、花瓣和 Pinterest 原图保存到视觉灵感库",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "cookies",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://moodboard-v2.frontend-cloud.corp.kuaishou.com/*",
+    "https://moodboard-app.frontend-cloud.corp.kuaishou.com/*",
+    "https://frontend-cloud.corp.kuaishou.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "灵感板"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

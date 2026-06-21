@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>添加到灵感库</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #FBFBFD;
+      color: #1D1D1F;
+      width: 360px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── 顶部 ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 28px; height: 28px;
+      background: #0071E3;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo svg { width: 14px; height: 14px; color: white; }
+    .brand { font-size: 14px; font-weight: 600; color: #1D1D1F; letter-spacing: -0.02em; }
+    .user-label { font-size: 11px; color: #8E8E93; margin-left: auto; }
+
+    /* ── 主体（固定高度+滚动） ── */
+    .body {
+      flex: 1;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    /* ── 图片预览（限高） ── */
+    .preview-wrap {
+      background: rgba(0,0,0,0.03);
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      max-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .preview-wrap img {
+      max-width: 100%;
+      max-height: 130px;
+      object-fit: contain;
+      display: block;
+    }
+    .preview-placeholder {
+      color: #C7C7CC;
+      font-size: 12px;
+      text-align: center;
+      padding: 24px;
+    }
+    .preview-placeholder .icon { font-size: 28px; margin-bottom: 4px; }
+
+    /* ── 来源 ── */
+    .source-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 9px;
+      background: rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 8px;
+      font-size: 11px;
+      color: #8E8E93;
+      flex-shrink: 0;
+    }
+    .source-bar .dot { width: 5px; height: 5px; background: #34C759; border-radius: 50%; flex-shrink: 0; }
+    .source-bar .url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── 表单 ── */
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .form-label { font-size: 11px; font-weight: 500; color: #6E6E73; }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #1D1D1F;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+    input[type="text"]:focus {
+      border-color: #0071E3;
+      box-shadow: 0 0 0 3px rgba(0,113,227,0.12);
+    }
+    input::placeholder { color: #C7C7CC; }
+
+    /* ── 标签 ── */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 5px; flex-shrink: 0; }
+    .tag {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: white;
+      color: #6E6E73;
+      transition: all 0.12s;
+      user-select: none;
+    }
+    .tag:hover { border-color: #0071E3; color: #0071E3; }
+    .tag.active { background: #0071E3; border-color: #0071E3; color: white; }
+
+    /* ── 底部按钮（固定在底部） ── */
+    .footer {
+      padding: 10px 14px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      gap: 7px;
+      flex-shrink: 0;
+      background: #FBFBFD;
+    }
+    .btn {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      letter-spacing: -0.01em;
+    }
+    .btn-secondary { background: rgba(0,0,0,0.06); color: #3D3D3D; }
+    .btn-secondary:hover { background: rgba(0,0,0,0.1); }
+    .btn-primary { background: #0071E3; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #0077ED; }
+    .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn-primary:disabled { background: #93BBFD; cursor: not-allowed; }
+
+    /* ── 错误提示 ── */
+    .error-bar {
+      font-size: 11px;
+      color: #FF3B30;
+      padding: 5px 9px;
+      background: rgba(255,59,48,0.07);
+      border-radius: 7px;
+      flex-shrink: 0;
+    }
+
+    /* ── 未登录 ── */
+    .login-hint {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .login-hint .emoji { font-size: 36px; }
+    .login-hint h3 { font-size: 14px; font-weight: 600; color: #1D1D1F; }
+    .login-hint p { font-size: 12px; color: #8E8E93; line-height: 1.5; }
+    .btn-open-app {
+      padding: 9px 20px;
+      background: #0071E3;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-open-app:hover { background: #0077ED; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+    </svg>
+  </div>
+  <span class="brand">灵感库</span>
+  <span class="user-label" id="userLabel">检测中…</span>
+</div>
+
+<!-- 未登录 -->
+<div id="loginHint" style="display:none; flex:1; flex-direction:column;">
+  <div class="login-hint">
+    <div class="emoji">🔐</div>
+    <h3>请先登录</h3>
+    <p>在灵感板网站登录后<br>即可一键保存图片</p>
+    <button class="btn-open-app" id="btnOpenApp">打开灵感板登录</button>
+  </div>
+</div>
+
+<!-- 主体表单 -->
+<div class="body" id="mainForm">
+
+  <div class="preview-wrap" id="previewWrap">
+    <div class="preview-placeholder">
+      <div class="icon">🖼️</div>
+      <div>加载中…</div>
+    </div>
+  </div>
+
+  <div class="source-bar" id="sourceBar" style="display:none">
+    <div class="dot"></div>
+    <span class="url" id="sourceUrl"></span>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">标题</label>
+    <input type="text" id="titleInput" placeholder="给这张图起个名字" />
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">标签</label>
+    <div class="tag-list" id="tagList"></div>
+  </div>
+
+  <div id="errorBar" class="error-bar" style="display:none"></div>
+
+</div>
+
+<div class="footer" id="footer">
+  <button class="btn btn-secondary" id="btnCancel">取消</button>
+  <button class="btn btn-primary" id="btnSave">收藏</button>
+</div>
+
+<script src="save.js"></script>
+</body>
+</html>
