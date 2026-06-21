@@ -1,0 +1,435 @@
+@import "tailwindcss";
+
+/* Apple 风格字体：优先使用系统字体 SF Pro，回退 Helvetica Neue */
+@theme inline {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue",
+    Arial, sans-serif;
+
+  --color-brand: #0071E3;
+  --color-brand-hover: #0077ED;
+  --color-surface: rgba(255, 255, 255, 0.72);
+  --color-surface-dark: rgba(28, 28, 30, 0.72);
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ── Personal local-first library ── */
+.personal-app { min-height: 100vh; background: #f5f5f7; color: #1d1d1f; }
+.personal-header { position: sticky; top: 0; z-index: 50; min-height: 72px; padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; background: rgba(255,255,255,.82); border-bottom: 1px solid rgba(0,0,0,.08); backdrop-filter: blur(24px) saturate(180%); }
+.personal-brand, .personal-header-actions, .personal-detail-actions, .personal-source-link { display: flex; align-items: center; gap: 10px; }
+.personal-logo { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; color: white; background: linear-gradient(145deg, #1478ff, #0059d6); box-shadow: 0 8px 22px rgba(0,113,227,.24); }
+.personal-brand strong { display: block; font-size: 16px; }
+.personal-brand span { display: block; margin-top: 2px; font-size: 11px; color: #8e8e93; letter-spacing: .04em; }
+.personal-btn { min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(0,0,0,.08); border-radius: 11px; background: #fff; color: #3a3a3c; font-size: 13px; font-weight: 600; cursor: pointer; transition: .18s ease; }
+.personal-btn:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(0,0,0,.08); }
+.personal-btn.primary { background: #0071e3; border-color: #0071e3; color: #fff; }
+.personal-btn.danger { color: #d70015; background: #fff5f5; }
+.personal-shell { min-height: calc(100vh - 72px); display: grid; grid-template-columns: 230px 1fr; }
+.personal-sidebar { position: sticky; top: 72px; align-self: start; height: calc(100vh - 72px); padding: 26px 16px; border-right: 1px solid rgba(0,0,0,.07); background: rgba(247,247,249,.9); overflow-y: auto; }
+.personal-sidebar-title { padding: 0 10px 10px; display: flex; justify-content: space-between; color: #8e8e93; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.personal-sidebar-title button, .personal-folder-delete { border: 0; background: transparent; color: #8e8e93; cursor: pointer; }
+.personal-sidebar > button, .personal-folder-row > button:first-child { width: 100%; height: 38px; padding: 0 10px; display: flex; align-items: center; gap: 9px; border: 0; border-radius: 10px; background: transparent; color: #55555a; font-size: 13px; text-align: left; cursor: pointer; }
+.personal-sidebar button.active { color: #005bbf; background: rgba(0,113,227,.11); font-weight: 650; }
+.personal-sidebar button span { margin-left: auto; color: #aeaeb2; font-size: 11px; }
+.personal-folder-row { position: relative; display: flex; align-items: center; }
+.personal-folder-delete { position: absolute; right: 5px; opacity: 0; }
+.personal-folder-row:hover .personal-folder-delete { opacity: 1; }
+.personal-storage { position: absolute; left: 16px; right: 16px; bottom: 20px; padding: 13px; display: flex; gap: 10px; border: 1px solid rgba(0,0,0,.06); border-radius: 13px; background: rgba(255,255,255,.8); color: #6e6e73; }
+.personal-storage strong, .personal-storage span { display: block; font-size: 11px; }
+.personal-storage span { margin-top: 3px; color: #aeaeb2; }
+.personal-main { min-width: 0; padding: 42px clamp(22px, 4vw, 58px) 70px; }
+.personal-hero { max-width: 1400px; margin: 0 auto 26px; display: flex; align-items: end; justify-content: space-between; gap: 40px; }
+.personal-eyebrow { color: #0071e3; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.personal-hero h1 { margin: 8px 0 9px; font-size: clamp(30px, 4vw, 52px); line-height: 1; letter-spacing: -.045em; }
+.personal-hero p { margin: 0; max-width: 680px; color: #6e6e73; font-size: 14px; }
+.personal-search { width: min(360px, 34vw); height: 42px; padding: 0 14px; display: flex; align-items: center; gap: 9px; border: 1px solid rgba(0,0,0,.08); border-radius: 13px; background: #fff; color: #8e8e93; box-shadow: 0 5px 18px rgba(0,0,0,.04); }
+.personal-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; font-size: 13px; }
+.personal-notice { max-width: 1400px; margin: 0 auto 20px; padding: 11px 14px; border-radius: 11px; color: #24643b; background: #eaf8ef; font-size: 12px; }
+.personal-notice.busy { color: #725100; background: #fff7d6; }
+.personal-grid { max-width: 1400px; margin: 0 auto; columns: 5 220px; column-gap: 16px; }
+.personal-card { width: 100%; margin: 0 0 16px; padding: 0; display: inline-block; break-inside: avoid; overflow: hidden; border: 1px solid rgba(0,0,0,.06); border-radius: 16px; background: #fff; color: inherit; text-align: left; box-shadow: 0 4px 14px rgba(0,0,0,.04); cursor: pointer; transition: .22s ease; }
+.personal-card:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,.10); }
+.personal-card-media { position: relative; min-height: 130px; background: linear-gradient(135deg,#eee,#f8f8fa); }
+.personal-card-media img, .personal-card-media video { width: 100%; height: auto; display: block; object-fit: cover; }
+.personal-card-type { position: absolute; top: 9px; right: 9px; padding: 4px 7px; border-radius: 7px; color: white; background: rgba(0,0,0,.48); backdrop-filter: blur(10px); font-size: 9px; }
+.personal-card-body { padding: 11px 12px 13px; }
+.personal-card-body strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.personal-card-body > span { display: block; margin-top: 4px; color: #aeaeb2; font-size: 10px; }
+.personal-card-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+.personal-card-tags i { padding: 3px 7px; border-radius: 99px; background: #edf5ff; color: #1b68b8; font-size: 9px; font-style: normal; }
+.personal-sentinel { height: 80px; display: grid; place-items: center; color: #aeaeb2; font-size: 12px; }
+.personal-empty { max-width: 620px; margin: 100px auto; padding: 60px; border: 1px dashed rgba(0,0,0,.13); border-radius: 24px; background: rgba(255,255,255,.56); text-align: center; color: #8e8e93; }
+.personal-empty h2 { margin: 14px 0 5px; color: #3a3a3c; }
+.personal-empty p { margin: 0 0 20px; font-size: 13px; }
+.personal-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: rgba(20,20,22,.42); backdrop-filter: blur(14px); }
+.personal-detail { position: relative; width: min(1080px, 96vw); max-height: 92vh; display: grid; grid-template-columns: minmax(0,1.25fr) minmax(320px,.75fr); overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 35px 90px rgba(0,0,0,.28); }
+.personal-close { position: absolute; top: 14px; right: 14px; z-index: 2; }
+.personal-icon-button { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(255,255,255,.9); cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.personal-detail-preview { min-height: 500px; display: grid; place-items: center; overflow: auto; background: #ececef; }
+.personal-detail-preview img, .personal-detail-preview video { max-width: 100%; max-height: 86vh; object-fit: contain; }
+.personal-detail-info { padding: 34px 30px; overflow-y: auto; }
+.personal-detail-info h2 { margin: 7px 0 3px; font-size: 23px; }
+.personal-detail-info p { margin: 0; color: #8e8e93; font-size: 11px; }
+.personal-detail-info label { margin-top: 17px; display: block; color: #6e6e73; font-size: 11px; font-weight: 650; }
+.personal-detail-info input, .personal-detail-info textarea, .personal-detail-info select { width: 100%; margin-top: 6px; padding: 10px 11px; border: 1px solid rgba(0,0,0,.1); border-radius: 10px; outline: 0; background: #fafafa; color: #1d1d1f; font: inherit; font-size: 13px; resize: vertical; }
+.personal-detail-info input:focus, .personal-detail-info textarea:focus, .personal-detail-info select:focus { border-color: #0071e3; box-shadow: 0 0 0 3px rgba(0,113,227,.12); }
+.personal-source-link { margin-top: 16px; color: #0071e3; font-size: 12px; text-decoration: none; }
+.personal-detail-actions { margin-top: 24px; flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  .personal-header { align-items: flex-start; padding: 12px 16px; }
+  .personal-header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .personal-shell { grid-template-columns: 1fr; }
+  .personal-sidebar { position: static; height: auto; display: flex; gap: 6px; overflow-x: auto; border-right: 0; border-bottom: 1px solid rgba(0,0,0,.07); }
+  .personal-sidebar-title, .personal-storage, .personal-folder-delete { display: none; }
+  .personal-sidebar > button, .personal-folder-row > button:first-child { width: auto; min-width: max-content; }
+  .personal-main { padding: 28px 16px 60px; }
+  .personal-hero { align-items: stretch; flex-direction: column; gap: 22px; }
+  .personal-search { width: 100%; }
+  .personal-detail { grid-template-columns: 1fr; max-height: 94vh; overflow-y: auto; }
+  .personal-detail-preview { min-height: 320px; }
+}
+
+:root {
+  /* Apple 亮色模式 */
+  --background: #FBFBFD;
+  --foreground: #1D1D1F;
+  --card: rgba(255, 255, 255, 0.8);
+  --card-foreground: #1D1D1F;
+  --popover: rgba(255, 255, 255, 0.95);
+  --popover-foreground: #1D1D1F;
+  --primary: #0071E3;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F5F7;
+  --secondary-foreground: #1D1D1F;
+  --muted: #F5F5F7;
+  --muted-foreground: #6E6E73;
+  --accent: #F5F5F7;
+  --accent-foreground: #1D1D1F;
+  --destructive: #FF3B30;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.06);
+  --ring: #0071E3;
+  --radius: 0.75rem;
+  --sidebar: #F5F5F7;
+  --sidebar-foreground: #1D1D1F;
+  --sidebar-primary: #0071E3;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EBEBF0;
+  --sidebar-accent-foreground: #1D1D1F;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: #0071E3;
+}
+
+/* ── 全局基础 ── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: #FBFBFD;
+    color: #1D1D1F;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ── Apple 背景 ── */
+.apple-bg {
+  background-color: #FBFBFD;
+}
+
+/* 微妙的渐变光晕背景（Apple.com 风格） */
+.apple-hero-bg {
+  background: #FBFBFD;
+  position: relative;
+  overflow: hidden;
+}
+
+.apple-hero-bg::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 900px;
+  height: 600px;
+  background: radial-gradient(ellipse at center,
+    rgba(0, 113, 227, 0.06) 0%,
+    rgba(100, 180, 255, 0.04) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── 磨砂玻璃效果 ── */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.glass-dark {
+  background: rgba(22, 22, 23, 0.8);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Apple 卡片 ── */
+.apple-card {
+  background: #FFFFFF;
+  border-radius: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.apple-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+/* ── Apple 按钮 ── */
+.apple-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: #0071E3;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 980px; /* Apple 圆角按钮 */
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  letter-spacing: -0.01em;
+}
+
+.apple-btn-primary:hover {
+  background: #0077ED;
+}
+
+.apple-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.apple-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071E3;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  letter-spacing: -0.01em;
+}
+
+.apple-btn-secondary:hover {
+  background: rgba(0, 113, 227, 0.15);
+}
+
+/* ── 标签 ── */
+.apple-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 980px;
+  font-size: 12px;
+  font-weight: 400;
+  background: rgba(0, 113, 227, 0.08);
+  color: #0071E3;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  letter-spacing: -0.01em;
+}
+
+.apple-tag:hover {
+  background: rgba(0, 113, 227, 0.14);
+}
+
+.apple-tag.active {
+  background: #0071E3;
+  color: #FFFFFF;
+}
+
+/* ── 输入框 ── */
+.apple-input {
+  width: 100%;
+  padding: 9px 14px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1D1D1F;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-font-smoothing: antialiased;
+  font-family: inherit;
+}
+
+.apple-input:focus {
+  border-color: #0071E3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+  background: #FFFFFF;
+}
+
+.apple-input::placeholder {
+  color: #8E8E93;
+}
+
+/* ── 瀑布流 ── */
+.masonry-grid {
+  columns: 2;
+  column-gap: 12px;
+}
+
+@media (min-width: 640px)  { .masonry-grid { columns: 3; } }
+@media (min-width: 1024px) { .masonry-grid { columns: 4; } }
+@media (min-width: 1280px) { .masonry-grid { columns: 5; } }
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+}
+
+/* ── 遮罩 ── */
+.image-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
+}
+
+/* ── 拖拽上传区 ── */
+.upload-zone {
+  border: 1.5px dashed rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  border-radius: 14px;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: #0071E3;
+  background: rgba(0, 113, 227, 0.03);
+}
+
+/* ── 颜色点 ── */
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* ── 进入动画 ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-up   { animation: fadeUp   0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-fade-in   { animation: fadeIn   0.4s ease forwards; }
+.animate-scale-in  { animation: scaleIn  0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+
+/* ── 模态框背景 ── */
+.modal-backdrop {
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* ── 分割线 ── */
+.apple-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ── 滚动条 ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ── Apple 风格 Section 标题 ── */
+.apple-eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0071E3;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

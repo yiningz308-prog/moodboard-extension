@@ -1,6 +1,4 @@
-// save.js — 重写版，UI 状态显式管理，任何情况都有兜底
-
-const APP_URL = 'https://moodboard-v2.frontend-cloud.corp.kuaishou.com'
+// save.js — 个人本地库版本
 
 const ALL_TAGS = ['运营', 'IP', '品牌', '包装', 'H5', '插画', '3D', '渲染', '排版', '图形', '标识', '科技感', '未来感', '趣味感']
 
@@ -13,13 +11,6 @@ function showMain(userName) {
   document.getElementById('footer').style.display = 'flex'
   document.getElementById('loginHint').style.display = 'none'
   document.getElementById('userLabel').textContent = userName
-}
-
-function showLogin() {
-  document.getElementById('mainForm').style.display = 'none'
-  document.getElementById('footer').style.display = 'none'
-  document.getElementById('loginHint').style.display = 'flex'
-  document.getElementById('userLabel').textContent = '未登录'
 }
 
 function showError(msg) {
@@ -70,17 +61,7 @@ function sendMsg(type, payload, timeoutMs = 6000) {
 // ── 初始化 ──────────────────────────────────────────────────────────
 async function init() {
   renderTags()
-
-  // 1. 检查登录（最多等 6s，回调方式确保一定能收到结果）
-  const authResult = await sendMsg('GET_AUTH_DEBUG', null, 6000)
-  const user = authResult?.user || null
-
-  if (!user || !user.$id) {
-    showLogin()
-    return
-  }
-
-  showMain(user.name || user.email || '已登录')
+  showMain('个人本地库')
 
   // 2. 读取待保存内容
   let stored = {}
@@ -112,7 +93,7 @@ async function init() {
     } else {
       // thumb 为 null（截帧失败），让 SW 下载字节渲染
       wrap.innerHTML = '<div class="preview-placeholder"><div class="icon">⏳</div><div>视频加载中…</div></div>'
-      sendMsg('FETCH_PREVIEW_BYTES', { url: pendingImage.imageUrl }, 15000).then(res => {
+      sendMsg('FETCH_PREVIEW_BYTES', { url: pendingImage.imageUrl, tabId: pendingImage.tabId }, 15000).then(res => {
         wrap.innerHTML = ''
         if (res?.ok && res.bytes) {
           const blob = new Blob([new Uint8Array(res.bytes)], { type: res.mime || 'video/mp4' })
@@ -188,8 +169,8 @@ async function handleSave() {
 // ── 事件绑定 ────────────────────────────────────────────────────────
 document.getElementById('btnSave').addEventListener('click', handleSave)
 document.getElementById('btnCancel').addEventListener('click', () => window.close())
-document.getElementById('btnOpenApp')?.addEventListener('click', () => {
-  chrome.tabs.create({ url: APP_URL })
+document.getElementById('btnOpenApp')?.addEventListener('click', async () => {
+  await sendMsg('OPEN_LIBRARY', null, 10000)
   window.close()
 })
 document.addEventListener('keydown', (e) => {

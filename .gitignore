@@ -3,3 +3,27 @@
 **/inputs/
 **/outputs/
 *.zip
+**/node_modules/
+**/.tmp/
+
+# 公司前端原始文件只作为本地迁移参考，不进入个人版仓库
+**/web/moodboard/appwrite-cf.config.json
+**/web/moodboard/components.json
+**/web/moodboard/find_videos.mjs
+**/web/moodboard/functions/
+**/web/moodboard/scripts/
+**/web/moodboard/pnpm-lock.company.yaml
+**/web/moodboard/src/assets/
+**/web/moodboard/src/components/
+**/web/moodboard/src/data/
+**/web/moodboard/src/lib/appwrite.ts
+**/web/moodboard/src/lib/colorExtract.ts
+**/web/moodboard/src/lib/mediaTypeBackfill.ts
+**/web/moodboard/src/lib/useMasonryGrid.ts
+**/web/moodboard/src/lib/utils.ts
+**/web/moodboard/src/pages/AboutPage.tsx
+**/web/moodboard/src/pages/AdminPage.tsx
+**/web/moodboard/src/pages/BoardPage.tsx
+**/web/moodboard/src/pages/ExplorePage.tsx
+**/web/moodboard/src/pages/HomePage.tsx
+**/web/moodboard/src/pages/LoginPage.tsx

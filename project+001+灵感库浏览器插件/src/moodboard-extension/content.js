@@ -331,6 +331,29 @@ function installHuabanHoverButton() {
 installHuabanHoverButton()
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'IMPORT_TO_LIBRARY') {
+    const requestId = crypto.randomUUID()
+    const timeout = setTimeout(() => {
+      window.removeEventListener('message', onImportResult)
+      sendResponse({ ok: false, error: '个人灵感库保存超时，请确认网页已经打开' })
+    }, 30000)
+    function onImportResult(event) {
+      if (event.source !== window || event.data?.source !== 'moodboard-web') return
+      if (event.data?.type !== 'IMPORT_MEDIA_RESULT' || event.data?.requestId !== requestId) return
+      clearTimeout(timeout)
+      window.removeEventListener('message', onImportResult)
+      sendResponse(event.data.result)
+    }
+    window.addEventListener('message', onImportResult)
+    window.postMessage({
+      source: 'moodboard-extension',
+      type: 'IMPORT_MEDIA',
+      requestId,
+      payload: msg.payload,
+    }, window.location.origin)
+    return true
+  }
+
   if (msg.type === 'GET_LAST_IMG') {
     sendResponse(lastRightClicked)
     return
