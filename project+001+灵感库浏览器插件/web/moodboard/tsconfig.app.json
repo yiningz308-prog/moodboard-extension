@@ -32,6 +32,7 @@
     "src/main.tsx",
     "src/App.tsx",
     "src/pages/PersonalLibraryPage.tsx",
-    "src/lib/localLibrary.ts"
+    "src/lib/localLibrary.ts",
+    "src/lib/imageAnalysis.ts"
   ]
 }
