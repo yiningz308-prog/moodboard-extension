@@ -1,3 +1,5 @@
+import { extractPalette, type ImageAnalysis } from '@/lib/imageAnalysis'
+
 export type LibraryItem = {
   id: string
   title: string
@@ -14,6 +16,8 @@ export type LibraryItem = {
   height: number
   blob: Blob
   thumbnail?: Blob
+  colorPalette?: string[]
+  analysis?: ImageAnalysis
 }
 
 export type LibraryFolder = {
@@ -157,6 +161,7 @@ export async function addFiles(
     const now = new Date().toISOString()
     const dimensions = await imageDimensions(file)
     const thumbnail = await createThumbnail(file)
+    const colorPalette = await extractPalette(thumbnail || file)
     const item: LibraryItem = {
       id: crypto.randomUUID(),
       title: file.name.replace(/\.[^.]+$/, '') || '未命名灵感',
@@ -173,6 +178,7 @@ export async function addFiles(
       height: dimensions.height,
       blob: file,
       thumbnail,
+      colorPalette,
     }
     await putItem(item)
     created.push(item)
@@ -307,8 +313,11 @@ export async function importLibrary(files: FileList): Promise<number> {
     if (!media) continue
     const thumbnail = await createThumbnail(media)
     const { fileName: _fileName, ...itemMetadata } = metadata
+    const colorPalette = itemMetadata.colorPalette?.length
+      ? itemMetadata.colorPalette
+      : await extractPalette(thumbnail || media)
     void _fileName
-    await putItem({ ...itemMetadata, blob: media, thumbnail })
+    await putItem({ ...itemMetadata, blob: media, thumbnail, colorPalette })
     imported += 1
   }
   return imported

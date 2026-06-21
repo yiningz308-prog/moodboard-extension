@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArchiveRestore,
+  Copy,
   Download,
   ExternalLink,
   Folder,
   FolderPlus,
   HardDrive,
   ImagePlus,
+  Palette,
   Search,
+  Settings,
+  Sparkles,
   Trash2,
   Upload,
   X,
@@ -28,8 +32,39 @@ import {
   type LibraryFolder,
   type LibraryItem,
 } from '@/lib/localLibrary'
+import {
+  analyzeImage,
+  colorHue,
+  extractPalette,
+  providerDefaults,
+  type VisionSettings,
+} from '@/lib/imageAnalysis'
 
 const PAGE_SIZE = 30
+const COLOR_FILTERS = [
+  { id: 'red', label: '红', color: '#ff3b30', range: [340, 20] },
+  { id: 'orange', label: '橙', color: '#ff9500', range: [20, 50] },
+  { id: 'yellow', label: '黄', color: '#ffcc00', range: [50, 70] },
+  { id: 'green', label: '绿', color: '#34c759', range: [70, 160] },
+  { id: 'blue', label: '蓝', color: '#007aff', range: [160, 250] },
+  { id: 'purple', label: '紫', color: '#af52de', range: [250, 310] },
+  { id: 'pink', label: '粉', color: '#ff2d55', range: [310, 340] },
+  { id: 'neutral', label: '黑白', color: '#8e8e93', range: null },
+] as const
+
+function matchesColor(item: LibraryItem, filterId: string) {
+  if (!filterId) return true
+  const filter = COLOR_FILTERS.find(value => value.id === filterId)
+  if (!filter || !item.colorPalette?.length) return false
+  return item.colorPalette.some(hex => {
+    const value = colorHue(hex)
+    if (!filter.range) return value.saturation < 16
+    const [start, end] = filter.range
+    return value.saturation >= 16 && (start > end
+      ? value.hue >= start || value.hue < end
+      : value.hue >= start && value.hue < end)
+  })
+}
 
 function formatBytes(value: number): string {
   if (!value) return '0 MB'
@@ -92,10 +127,60 @@ function DetailPanel({
   const [description, setDescription] = useState(item.description)
   const [tags, setTags] = useState(item.tags.join(', '))
   const [folderId, setFolderId] = useState(item.folderId || '')
+  const [currentItem, setCurrentItem] = useState(item)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisError, setAnalysisError] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
+  const [vision, setVision] = useState<VisionSettings>(() => {
+    const provider = (localStorage.getItem('moodboard_vlm_provider') || 'siliconflow') as VisionSettings['provider']
+    const defaults = providerDefaults(provider)
+    return {
+      provider,
+      apiKey: localStorage.getItem('moodboard_vlm_key') || '',
+      model: localStorage.getItem('moodboard_vlm_model') || defaults.model,
+      endpoint: localStorage.getItem('moodboard_vlm_endpoint') || defaults.endpoint,
+    }
+  })
+
+  useEffect(() => {
+    if (currentItem.mediaType === 'video' || currentItem.colorPalette?.length) return
+    extractPalette(currentItem.thumbnail || currentItem.blob).then(async colorPalette => {
+      if (!colorPalette.length) return
+      const updated = { ...currentItem, colorPalette }
+      await putItem(updated)
+      setCurrentItem(updated)
+      onSaved(updated)
+    }).catch(() => undefined)
+  }, [currentItem, onSaved])
+
+  function saveVision(next: VisionSettings) {
+    setVision(next)
+    localStorage.setItem('moodboard_vlm_provider', next.provider)
+    localStorage.setItem('moodboard_vlm_key', next.apiKey)
+    localStorage.setItem('moodboard_vlm_model', next.model)
+    localStorage.setItem('moodboard_vlm_endpoint', next.endpoint)
+  }
+
+  async function generateAnalysis() {
+    setAnalysisLoading(true)
+    setAnalysisError('')
+    try {
+      const analysis = await analyzeImage(currentItem.thumbnail || currentItem.blob, currentItem.title, vision)
+      const updated = { ...currentItem, analysis, updatedAt: new Date().toISOString() }
+      await putItem(updated)
+      setCurrentItem(updated)
+      onSaved(updated)
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : String(error))
+      if (!vision.apiKey) setShowSettings(true)
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
 
   async function save() {
     const updated: LibraryItem = {
-      ...item,
+      ...currentItem,
       title: title.trim() || '未命名灵感',
       description: description.trim(),
       tags: tags.split(/[,，]/).map(tag => tag.trim()).filter(Boolean),
@@ -127,9 +212,24 @@ function DetailPanel({
         <div className="personal-detail-info">
           <div>
             <span className="personal-eyebrow">原始文件永久保留</span>
-            <h2>{item.title}</h2>
-            <p>{formatBytes(item.blob.size)} · {item.mimeType}</p>
+            <h2>{currentItem.title}</h2>
+            <p>{formatBytes(currentItem.blob.size)} · {currentItem.mimeType}</p>
           </div>
+          {currentItem.colorPalette?.length ? (
+            <section className="personal-analysis-section">
+              <div className="personal-section-title"><Palette size={15} /> 色板与色相</div>
+              <div className="personal-palette">
+                {currentItem.colorPalette.map(hex => {
+                  const value = colorHue(hex)
+                  return (
+                    <button key={hex} title={`${hex} · 色相 ${Math.round(value.hue)}°`} onClick={() => navigator.clipboard.writeText(hex)} type="button">
+                      <i style={{ background: hex }} /><span>{hex}<small>H {Math.round(value.hue)}°</small></span>
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          ) : null}
           <label>标题<input value={title} onChange={event => setTitle(event.target.value)} /></label>
           <label>标签<input value={tags} onChange={event => setTags(event.target.value)} placeholder="品牌, 排版, 科技感" /></label>
           <label>文件夹
@@ -139,6 +239,44 @@ function DetailPanel({
             </select>
           </label>
           <label>备注<textarea value={description} onChange={event => setDescription(event.target.value)} rows={4} /></label>
+          <section className="personal-analysis-section">
+            <div className="personal-section-heading">
+              <div className="personal-section-title"><Sparkles size={15} /> 一键图片反推</div>
+              <button className="personal-icon-button compact" onClick={() => setShowSettings(value => !value)} title="视觉模型设置" type="button"><Settings size={14} /></button>
+            </div>
+            {showSettings && (
+              <div className="personal-vlm-settings">
+                <label>服务
+                  <select value={vision.provider} onChange={event => {
+                    const provider = event.target.value as VisionSettings['provider']
+                    const defaults = providerDefaults(provider)
+                    saveVision({ ...vision, provider, model: defaults.model, endpoint: defaults.endpoint })
+                  }}>
+                    <option value="siliconflow">硅基流动</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="volcengine">火山引擎 / 豆包</option>
+                    <option value="custom">自定义 OpenAI 兼容接口</option>
+                  </select>
+                </label>
+                <label>API Key<input type="password" value={vision.apiKey} onChange={event => saveVision({ ...vision, apiKey: event.target.value })} placeholder="仅保存在当前浏览器" /></label>
+                <label>模型<input value={vision.model} onChange={event => saveVision({ ...vision, model: event.target.value })} /></label>
+                <label>接口地址<input value={vision.endpoint} onChange={event => saveVision({ ...vision, endpoint: event.target.value })} /></label>
+              </div>
+            )}
+            <button className="personal-btn primary analysis-trigger" disabled={analysisLoading || currentItem.mediaType === 'video'} onClick={generateAnalysis} type="button">
+              <Sparkles size={15} /> {analysisLoading ? '正在识图分析…' : currentItem.analysis ? '重新分析图片' : '生成提示词与设计分析'}
+            </button>
+            {analysisError && <div className="personal-analysis-error">{analysisError}</div>}
+            {currentItem.analysis && (
+              <div className="personal-analysis-result">
+                <article><header>英文提示词<button onClick={() => navigator.clipboard.writeText(currentItem.analysis!.promptEn)} type="button"><Copy size={13} /></button></header><p>{currentItem.analysis.promptEn}</p></article>
+                <article><header>中文提示词<button onClick={() => navigator.clipboard.writeText(currentItem.analysis!.promptZh)} type="button"><Copy size={13} /></button></header><p>{currentItem.analysis.promptZh}</p></article>
+                {currentItem.analysis.lexicon.length > 0 && <div><strong>设计术语</strong>{currentItem.analysis.lexicon.map(term => <div className="personal-term" key={`${term.termZh}-${term.termEn}`}><b>{term.termZh}</b><span>{term.termEn}</span><i>{term.relevance === 'high' ? '高' : term.relevance === 'low' ? '低' : '中'}</i><p>{term.definition}</p></div>)}</div>}
+                {currentItem.analysis.vibes.length > 0 && <div><strong>氛围词</strong><div className="personal-chip-list pink">{currentItem.analysis.vibes.map(value => <i key={value}>{value}</i>)}</div></div>}
+                {currentItem.analysis.searchKeywords.length > 0 && <div><strong>搜图提示词</strong><div className="personal-chip-list">{currentItem.analysis.searchKeywords.map(value => <button key={value} onClick={() => window.open(`https://www.pinterest.com/search/pins/?q=${encodeURIComponent(value)}`, '_blank')} type="button">{value}</button>)}</div></div>}
+              </div>
+            )}
+          </section>
           {item.sourceUrl && (
             <a className="personal-source-link" href={item.sourceUrl} target="_blank" rel="noreferrer">
               <ExternalLink size={14} /> 打开来源页
@@ -170,6 +308,7 @@ export default function PersonalLibraryPage() {
   const [folders, setFolders] = useState<LibraryFolder[]>([])
   const [activeFolder, setActiveFolder] = useState<string>('all')
   const [query, setQuery] = useState('')
+  const [activeColor, setActiveColor] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [selected, setSelected] = useState<LibraryItem | null>(null)
   const [busy, setBusy] = useState('')
@@ -184,6 +323,17 @@ export default function PersonalLibraryPage() {
     setItems(nextItems)
     setFolders(nextFolders)
     setUsage(nextUsage)
+    // 旧数据没有色板：页面先显示，再在后台逐张补齐，避免阻塞首屏。
+    void (async () => {
+      for (const item of nextItems.filter(value => value.mediaType !== 'video' && !value.colorPalette?.length)) {
+        const colorPalette = await extractPalette(item.thumbnail || item.blob)
+        if (!colorPalette.length) continue
+        const updated = { ...item, colorPalette }
+        await putItem(updated)
+        setItems(previous => previous.map(value => value.id === updated.id ? updated : value))
+        await new Promise(resolve => setTimeout(resolve, 40))
+      }
+    })()
   }, [])
 
   useEffect(() => {
@@ -238,9 +388,9 @@ export default function PersonalLibraryPage() {
       const folderMatch = activeFolder === 'all' || (activeFolder === 'none' ? !item.folderId : item.folderId === activeFolder)
       const textMatch = !normalized || [item.title, item.description, item.tags.join(' ')]
         .some(value => value.toLowerCase().includes(normalized))
-      return folderMatch && textMatch
+      return folderMatch && textMatch && matchesColor(item, activeColor)
     })
-  }, [items, activeFolder, query])
+  }, [items, activeFolder, query, activeColor])
 
   async function handleUpload(fileList: FileList | null) {
     if (!fileList?.length) return
@@ -349,6 +499,11 @@ export default function PersonalLibraryPage() {
           <div className="personal-hero">
             <div><span className="personal-eyebrow">单用户 · 无需登录</span><h1>把好灵感，放在自己手里。</h1><p>原图存在本机，预览图用于快速浏览；导出后可在新设备完整恢复。</p></div>
             <div className="personal-search"><Search size={17} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索标题、标签或备注" /></div>
+          </div>
+          <div className="personal-color-filters">
+            <span><Palette size={14} /> 色相</span>
+            <button className={!activeColor ? 'active' : ''} onClick={() => setActiveColor('')} type="button">全部</button>
+            {COLOR_FILTERS.map(filter => <button className={activeColor === filter.id ? 'active' : ''} key={filter.id} onClick={() => setActiveColor(filter.id)} type="button"><i style={{ background: filter.color }} />{filter.label}</button>)}
           </div>
 
           {(notice || busy) && <div className={`personal-notice ${busy ? 'busy' : ''}`}>{busy || notice}</div>}
